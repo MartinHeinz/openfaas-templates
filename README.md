@@ -174,3 +174,4 @@ _See also (live debugging): <https://www.youtube.com/watch?v=iv57ctMc6g8>_
 - <https://github.com/openfaas-incubator/ofc-bootstrap>
 - <https://github.com/openfaas/faas-cli/blob/master/guide/TEMPLATE.md>
 - <https://docs.openfaas.com/deployment/troubleshooting/#function-execution-logs>
+- <https://blog.alexellis.io/serverless-golang-with-openfaas/>

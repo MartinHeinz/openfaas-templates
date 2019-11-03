@@ -1,0 +1,11 @@
+[
+  {
+    "template": "golang-mod",
+    "platform": "x86_64",
+    "language": "Go",
+    "source": "MartinHeinz",
+    "description": "Golang template with modules support.",
+    "repo": "https://github.com/MartinHeinz/openfaas-templates",
+    "official": "false"
+  }
+]
