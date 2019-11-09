@@ -14,3 +14,6 @@ before_install:
 
 script:
   - ./verify.sh
+
+notifications:
+  email: false

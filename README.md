@@ -1,4 +1,7 @@
-# Going Serverless with Go, OpenFaaS and k3s
+# OpenFaaS Templates
+[![Build Status](https://travis-ci.com/MartinHeinz/openfaas-templates.svg?branch=master)](https://travis-ci.com/MartinHeinz/openfaas-templates)
+
+This repository is used both for development of _OpenFaaS_ templates and well as a _OpenFaaS Template Store_.
 
 ## Setup Cluster
 
