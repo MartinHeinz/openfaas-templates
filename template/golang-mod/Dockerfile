@@ -1,23 +1,22 @@
 FROM openfaas/of-watchdog:0.7.2 as watchdog
 FROM golang:1.13.1-alpine3.10 as build
 
+ARG GO111MODULE="on"
+ARG GOPROXY=""
+ENV CGO_ENABLED=0
+
 RUN apk --no-cache add git
 
 COPY --from=watchdog /fwatchdog /usr/bin/fwatchdog
 RUN chmod +x /usr/bin/fwatchdog
 
-ENV CGO_ENABLED=0
-
-# RUN mkdir -p /go/src/handler  # Might need to put this back, because of WORKDIR not respecting USER
 WORKDIR /go/src/handler
 COPY . .
 
-ARG GO111MODULE="on"
-ARG GOPROXY=""
-
 # Run go test, gofmt, go vet
-RUN chmod +x test.sh && ./test.sh
-RUN go build --ldflags "-s -w" -a -installsuffix cgo -o handler .
+RUN chmod +x test.sh \
+    && ./test.sh \
+    && go build --ldflags "-s -w" -a -installsuffix cgo -o handler .
 
 FROM alpine:3.10
 # Add non root user and certs

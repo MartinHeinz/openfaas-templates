@@ -2,19 +2,18 @@
 set -e
 
 CLI="faas-cli"
+SUFIX=$(cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 8 | head -n 1)
 
-build_template()
-{
+build_template() {
     template=$1
 
     echo Building $template
-    func_name=$template-ci
+    func_name=$template-$SUFIX
     $CLI new $func_name --lang $template 2>/dev/null 1>&2
     $CLI build -f $func_name.yml
 }
 
-verify_and_clean()
-{
+verify() {
     image=$1
     tag_name=latest
 
@@ -42,6 +41,15 @@ verify_and_clean()
         echo $image template validation successful
     fi
 }
+
+# remove the generated files and folders if successful
+function cleanup() {
+    rm -rf *-$SUFIX *-$SUFIX.yml
+    cd ../
+    rm -rf *-$SUFIX *-$SUFIX.yml
+}
+
+trap cleanup EXIT  # Run clean-up function regardless of success or failure
 
 if ! [ -x "$(command -v faas-cli)" ]; then
     HERE=`pwd`
@@ -72,11 +80,7 @@ do
     pushd ../ 2>/dev/null 1>&2
 
     build_template $template
-    verify_and_clean $template
+    verify $template
 
     popd 2>/dev/null 1>&2
 done
-
-# remove the generated files and folders if successful
-cd ../
-rm -rf *-ci *-ci.yml
