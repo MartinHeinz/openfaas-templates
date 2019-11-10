@@ -9,11 +9,12 @@ addons:
       - docker-ce
 
 install:
+  - curl -sL https://taskfile.dev/install.sh | sh
 
 before_install:
 
 script:
-  - ./verify.sh
+  - ./bin/task verify
 
 notifications:
   email: false

@@ -1,0 +1,26 @@
+version: '2'
+
+vars:
+  PREFIX: martinheinz
+  SUFFIX:
+    sh: cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 8 | head -n 1
+
+tasks:
+  verify:  # task verify
+    cmds:
+      - ./scripts/functions.sh verify_all _ {{.SUFFIX}}
+
+  build:  # task build FUNC=golang-mod
+    dir: ./template/{{.FUNC}}
+    cmds:
+      - docker build -t {{.FUNC}} .
+
+  run:  # task run FUNC=golang-mod
+    cmds:
+      - ./scripts/functions.sh build_template {{.FUNC}} {{.SUFFIX}}
+      - echo {{.FUNC}}-{{.SUFFIX}}
+      - docker run -d -p 8080:8080 {{.FUNC}}-{{.SUFFIX}}:latest
+
+  clean:
+    cmds:
+      - rm -rf ./build

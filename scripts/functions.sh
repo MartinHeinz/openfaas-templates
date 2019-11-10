@@ -1,19 +1,16 @@
 #!/bin/bash
 set -e
 
-CLI="faas-cli"
-SUFIX=$(cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 8 | head -n 1)
-
-build_template() {
+function build_template() {
     template=$1
 
     echo Building $template
-    func_name=$template-$SUFIX
+    func_name=$template-$suffix
     $CLI new $func_name --lang $template 2>/dev/null 1>&2
     $CLI build -f $func_name.yml
 }
 
-verify() {
+function verify() {
     image=$1
     tag_name=latest
 
@@ -42,14 +39,41 @@ verify() {
     fi
 }
 
-# remove the generated files and folders if successful
-function cleanup() {
-    rm -rf *-$SUFIX *-$SUFIX.yml
-    cd ../
-    rm -rf *-$SUFIX *-$SUFIX.yml
+function verify_all() {
+    echo Validating templates with faas-cli $cli_version
+
+    # verify each of the templates
+    for dir in ./template/*/
+    do
+        echo $dir
+        dirname=${dir%*/}
+        template=${dirname##*/}
+
+        # skip arm templates
+        case "$template" in
+        *-arm* ) continue ;;
+        esac
+
+        pushd . 2>/dev/null 1>&2
+
+        build_template $template
+        verify $template
+
+        popd 2>/dev/null 1>&2
+    done
+
 }
 
-trap cleanup EXIT  # Run clean-up function regardless of success or failure
+# remove the generated files and folders
+function cleanup() {
+    rm -rf *-$suffix *-$suffix.yml
+    sed -i '$ d' .gitignore
+    sed -i '$ d' .gitignore
+}
+
+
+CLI="faas-cli"
+suffix=$3
 
 if ! [ -x "$(command -v faas-cli)" ]; then
     HERE=`pwd`
@@ -62,25 +86,16 @@ fi
 
 cli_version=$($CLI version --short-version)
 
-echo Validating templates with faas-cli $cli_version
+trap cleanup EXIT  # Run clean-up function regardless of success or failure
 
-cd ./template
 
-# verify each of the templates
-for dir in ./*/
-do
-    dirname=${dir%*/}
-    template=${dirname##*/}
-
-    # skip arm templates
-    case "$template" in
-    *-arm* ) continue ;;
-    esac
-
-    pushd ../ 2>/dev/null 1>&2
-
-    build_template $template
-    verify $template
-
-    popd 2>/dev/null 1>&2
-done
+# Check if the function exists (bash specific)
+if declare -f "$1" > /dev/null
+then
+  # call arguments verbatim
+  "$@"
+else
+  # Show a helpful error
+  echo "'$1' is not a known function name" >&2
+  exit 1
+fi
