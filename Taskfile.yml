@@ -21,6 +21,14 @@ tasks:
       - echo {{.FUNC}}-{{.SUFFIX}}
       - docker run -d -p 8080:8080 {{.FUNC}}-{{.SUFFIX}}:latest
 
+  debug:  # task debug FUNC=golang-mod
+    cmds:
+      - ./scripts/functions.sh build_template {{.FUNC}} {{.SUFFIX}}
+      - echo {{.FUNC}}-{{.SUFFIX}}
+      - docker run --rm --name debug-func-{{.SUFFIX}} -p 8081:8080 {{.FUNC}}-{{.SUFFIX}}:latest
+      - docker exec -it debug-func-{{.SUFFIX}}
+    ignore_error: true
+
   clean:
     cmds:
       - rm -rf ./build

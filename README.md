@@ -3,64 +3,67 @@
 
 This repository is used both for development of _OpenFaaS_ templates and well as a _OpenFaaS Template Store_.
 
-## Setup Cluster
+## Usage
 
-### "Production" Cluster
+Before deploying functions, the Docker image needs to first be push to remote registry repository, this repository is specified using `PREFIX` variable in `Taskfile.yml`. You need to change its value to your _Docker Hub_ username.
 
-```shell
-curl -sfL https://get.k3s.io | sh -
+- **Verify**:
 
-sudo cat /var/lib/rancher/k3s/server/node-token  # This is K3S_TOKEN
+    You can verify that all templates work by running:
+    ```bash
+    task verify
+    ```
+    This will build all templates in `template` directory. Ideally test should be included in Docker build, so that test don't need to be ran separately.
 
-export K3S_URL="http://localhost:6443"
-export K3S_TOKEN="..."
+- **Build**:
 
-sudo cp /etc/rancher/k3s/k3s.yaml ~/.kube/config
-sudo chown $(id -u):$(id -g) /home/martin/.kube/config
+    You can build the Docker image of the template using:
+    ```bash
+    task build FUNC=golang-mod
+    ```
+    
+- **Run**:
 
-kubectl get node
-kubectl config view
+    You can run template by building and running function created from it:
+    ```bash
+    task run FUNC=golang-mod
+    ```
+    The function is ran in Docker container on local accessible on port _8081_.
+        
+- **Debug**:
 
-```
+    You can debug template by building and running function created from it and attaching to its `watchdog` process logs:
+    ```bash
+    task debug FUNC=golang-mod
+    ```
+    
+    When the function is running you can hit it with _cURL_:
+    ```bash
+    curl -vvv --header "Content-Type: application/json" \
+              --request POST \
+              --data '{"key":"value"}' \
+              127.0.0.1:8081
+    ```
+        
+    You might also want to change timeouts of the function when debugging (`template.yml`):
+        
+    ```yaml
+    functions:
+        func_name:
+          ...
+          environment:
+              read_timeout: 20
+              write_timeout: 20
+    ```
+    
+- **Clean**:
 
-If you get `connection refused` error try running `systemctl restart k3s`
+    To remove artifacts created during build you can run:
+    ```bash
+    task clean
+    ```
 
-To add worker nodes, `ssh` into other machine, export variables as shown above and run `curl -sfL https://get.k3s.io | sh -`
-
-
-### Install CLI
-
-```shell
-curl -sL https://cli.openfaas.com | sudo sh
-```
-
-### Deploy OpenFaaS
-
-```shell
-git clone https://github.com/openfaas/faas-netes
-
-kubectl apply -f https://raw.githubusercontent.com/openfaas/faas-netes/master/namespaces.yml
-
-PASSWORD=$(head -c 12 /dev/urandom | shasum| cut -d' ' -f1)
-kubectl -n openfaas create secret generic basic-auth \
---from-literal=basic-auth-user=admin \
---from-literal=basic-auth-password="$PASSWORD"
-
-cd faas-netes && \
-kubectl apply -f ./yaml
-
-export OPENFAAS_URL=http://127.0.0.1:31112
-
-kubectl port-forward svc/gateway -n openfaas 31112:8080 &
-```
-
-Open <http://127.0.0.1:31112> in browser and login with `admin` and `echo $PASSWORD`
-
-### Create Function
-
-```shell
-faas-cli new --lang <TEMPLATE_NAME> <NAME> --prefix="<DOCKER_HUB_USERNAME>" # can also use GitHub registry
-```
+## Using Local Docker Images
 
 Images need to be pushed to remote registry, because _OpenFaaS_ doesn't recognize local repositories. That's why, you need to specify prefix, which is a username + repository in remote registry.
 
@@ -75,102 +78,40 @@ helm upgrade openfaas chart/openfaas --install \
   --set operator.create=true
 ```
 
-### Build and Deploy Function
+## Create New Template
 
-```shell
-cd template/<TEMPLATE_NAME>/
-go mod tidy
+How you create new templates depends on language you use, therefore please refer to guide at <https://github.com/openfaas/faas-cli/blob/master/guide/TEMPLATE.md>
 
-cd ../functions
-faas-cli build -f <FUNC_NAME>.yml
-faas-cli push -f <FUNC_NAME>.yml
-faas-cli deploy -f <FUNC_NAME>.yml
-```
 
-_Golang_ module system is used, therefore before building image, you first need to download all dependencies with `go mod tidy`
-
-## Create Own Template
-
-_See: <https://github.com/openfaas/faas-cli/blob/master/guide/TEMPLATE.md>_
-
-```shell
-faas-cli template pull https://github.com/MartinHeinz/golang-openfaas-k3s --overwrite
-
-# Or
-
-export OPENFAAS_TEMPLATE_URL="https://github.com/MartinHeinz/golang-openfaas-k3s"
-faas-cli template pull
-
-faas-cli new --list
-```
-
-### Testing Template
-
-```shell
-# From this project root directory
-faas-cli new --lang <TEMPLATE_NAME> <NAME> --prefix="<DOCKER_HUB_USERNAME>" # can also use GitHub registry
-
-# <NAME> directory and <NAME>.yml is created
-```
-
-At this point you can build, push and deploy the function
+For the _Golang_ based templates please use _Golang_ module system.
+ 
+You can use `./template/golang-mod` as a base or example.
+ 
+Before building image, you first need to download all dependencies with `go mod tidy`.
 
 ## Troubleshooting Functions
 
-View functions and their logs:
+Apart from `task debug` you can also use following commands for troubleshooting:
 
-```console
-$ kubectl get deploy -n openfaas-fn
-NAME             READY     UP-TO-DATE   AVAILABLE    AGE
-<FUNCTION_NAME>   0/1       1            0           11m
-nodeinfo          1/1       1            1           7h3m
+- View functions and their logs:
 
-kubectl logs -n openfaas-fn deploy/<FUNCTION_ANME>
-```
+    ```console
+    $ kubectl get deploy -n openfaas-fn
+    NAME             READY     UP-TO-DATE   AVAILABLE    AGE
+    <FUNCTION_NAME>   0/1       1            0           11m
+    nodeinfo          1/1       1            1           7h3m
+    
+    kubectl logs -n openfaas-fn deploy/<FUNCTION_ANME>
+    ```
 
-See if function failed to start:
+- See if function failed to start:
 
-```shell
-kubectl describe -n openfaas-fn deploy/<FUNCTION_NAME>
-```
-
-### Debugging Functions
-Run with Docker:
-```shell
-docker run --name debug-test-func \
-  -p 8081:8080 -ti <DOCKER_HUB_USERNAME>/<FUNC_NAME>:latest sh
-```
-
-Start function when inside container:
-
-```console
-~ $ fprocess=./handler ./fwatchdog &
-```
-
-cURL the container:
-
-```shell
-curl -vvv --header "Content-Type: application/json" \
-          --request POST \
-          --data '{"key":"value"}' \
-          127.0.0.1:8081
-```
-
-Setting timeouts for function:
-
-```yaml
-functions:
-    func_name:
-      ...
-      environment:
-          read_timeout: 20
-          write_timeout: 20
-```
-
-_See also (live debugging): <https://www.youtube.com/watch?v=iv57ctMc6g8>_
+    ```shell
+    kubectl describe -n openfaas-fn deploy/<FUNCTION_NAME>
+    ```
 
 
-#### Resources
+### Resources
 - <https://github.com/openfaas/templates/blob/master/template/dockerfile/function/Dockerfile>
 - <https://rancher.com/docs/k3s/latest/en/configuration/>
 - <https://blog.alexellis.io/test-drive-k3s-on-raspberry-pi/>
