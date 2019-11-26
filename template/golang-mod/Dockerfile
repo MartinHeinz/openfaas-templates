@@ -2,7 +2,6 @@ FROM openfaas/of-watchdog:0.7.2 as watchdog
 FROM golang:1.13.1-alpine3.10 as build
 
 ARG GO111MODULE="on"
-ARG GOPROXY=""
 ENV CGO_ENABLED=0
 
 RUN apk --no-cache add git

@@ -1,2 +1,5 @@
 language: golang-mod
 fprocess: ./handler
+welcome_message: |
+  You created Golang function, that uses Go modules.
+  It includes simple handler as well as example unit test.
