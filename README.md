@@ -3,6 +3,15 @@
 
 This repository is used both for development of _OpenFaaS_ templates and well as a _OpenFaaS Template Store_.
 
+## Blog Posts - More Information About This Repo
+
+You can find more information about this project/repository and how to use it in following blog posts:
+
+- [Going Serverless with OpenFaaS and Golang — The Ultimate Setup and Workflow](https://towardsdatascience.com/going-serverless-with-openfaas-and-golang-the-ultimate-setup-and-workflow-52a4a85a7951)
+
+## Related Projects/Work
+_OpenFaaS_ functions created using templates in this repository can be found in following repository - <https://github.com/MartinHeinz/openfaas-functions>.
+
 ## Usage
 
 Before deploying functions, the Docker image needs to first be push to remote registry repository, this repository is specified using `PREFIX` variable in `Taskfile.yml`. You need to change its value to your _Docker Hub_ username.
