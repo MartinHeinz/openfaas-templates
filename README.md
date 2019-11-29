@@ -8,6 +8,7 @@ This repository is used both for development of _OpenFaaS_ templates and well as
 You can find more information about this project/repository and how to use it in following blog posts:
 
 - [Going Serverless with OpenFaaS and Golang — The Ultimate Setup and Workflow](https://towardsdatascience.com/going-serverless-with-openfaas-and-golang-the-ultimate-setup-and-workflow-52a4a85a7951)
+- [Going Serverless with OpenFaaS and Golang — Building Optimized Templates](https://towardsdatascience.com/going-serverless-with-openfaas-and-golang-building-optimized-templates-730991084443)
 
 ## Related Projects/Work
 _OpenFaaS_ functions created using templates in this repository can be found in following repository - <https://github.com/MartinHeinz/openfaas-functions>.
